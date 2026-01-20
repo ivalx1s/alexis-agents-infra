@@ -1,0 +1,32 @@
+model = "gpt-5.2"
+model_reasoning_effort = "xhigh"
+[projects."/Users/aagrigore1"]
+trust_level = "trusted"
+
+[projects."/Users/aagrigore1/src/mts/mymts/app"]
+trust_level = "trusted"
+
+[projects."/Users/aagrigore1/Downloads"]
+trust_level = "trusted"
+
+[projects."/Users/aagrigore1/src/mts/membrana/ios/packages/darwin-httpclient"]
+trust_level = "trusted"
+
+[projects."/Users/aagrigore1/src/mts/bsim"]
+trust_level = "trusted"
+
+[projects."/Users/aagrigore1/src/mts/membrana/ios/ios-membrana-app-redesign"]
+trust_level = "trusted"
+
+[projects."/Users/aagrigore1/src/deps_duplicate_sample"]
+trust_level = "trusted"
+
+[projects."/Users/aagrigore1/.claude/skills"]
+trust_level = "untrusted"
+
+[notice]
+"hide_gpt-5.1-codex-max_migration_prompt" = true
+hide_rate_limit_model_nudge = true
+
+[notice.model_migrations]
+"gpt-5.2" = "gpt-5.2-codex"

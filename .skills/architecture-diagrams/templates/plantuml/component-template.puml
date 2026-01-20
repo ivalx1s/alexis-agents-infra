@@ -1,0 +1,87 @@
+@startuml
+!theme plain
+
+title [System/Module Name] Architecture
+
+' ============================================================================
+' External Actors
+' ============================================================================
+
+actor "User" as User
+
+' ============================================================================
+' Presentation Layer
+' ============================================================================
+
+package "Presentation Layer" #LightBlue {
+  [REST Controller] as REST
+  [GraphQL Controller] as GQL
+  () "HTTP API" as HTTP
+}
+
+' ============================================================================
+' Business Layer
+' ============================================================================
+
+package "Business Layer" #LightGreen {
+  [Service A] as SvcA
+  [Service B] as SvcB
+  [Service C] as SvcC
+}
+
+' ============================================================================
+' Data Layer
+' ============================================================================
+
+package "Data Layer" #LightYellow {
+  [Repository A] as RepoA
+  [Repository B] as RepoB
+}
+
+' ============================================================================
+' Infrastructure
+' ============================================================================
+
+database "PostgreSQL" as DB
+queue "Message Queue" as MQ
+
+' ============================================================================
+' External Systems
+' ============================================================================
+
+cloud "External" {
+  [External API] as ExtAPI
+}
+
+' ============================================================================
+' Relationships
+' ============================================================================
+
+' User to Presentation
+User --> HTTP
+
+' Presentation
+HTTP -- REST
+HTTP -- GQL
+REST --> SvcA
+REST --> SvcB
+GQL --> SvcA
+GQL --> SvcC
+
+' Business to Data
+SvcA --> RepoA
+SvcB --> RepoB
+SvcC --> RepoA
+
+' Data to Infrastructure
+RepoA --> DB
+RepoB --> DB
+
+' Async processing
+SvcB --> MQ : publishes
+SvcC --> MQ : consumes
+
+' External integrations
+SvcA --> ExtAPI : calls
+
+@enduml

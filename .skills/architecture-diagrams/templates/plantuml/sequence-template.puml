@@ -1,0 +1,59 @@
+@startuml
+!theme plain
+
+title [Scenario Name] Flow
+
+' ============================================================================
+' Participants
+' ============================================================================
+
+actor "User" as User
+participant "Web App" as Web
+participant "API Server" as API
+database "Database" as DB
+
+' Optional external systems:
+' participant "External Service" as Ext
+
+' ============================================================================
+' Main Flow
+' ============================================================================
+
+autonumber
+
+== Initialization ==
+
+User -> Web: Action description
+activate Web
+
+Web -> API++: POST /endpoint
+API -> DB: Query
+activate DB
+DB --> API: Result
+deactivate DB
+
+' ============================================================================
+' Conditional Logic
+' ============================================================================
+
+alt Success case
+  API --> Web: 200 OK + data
+  Web --> User: Show success
+else Error case
+  API --> Web--: 400/500 Error
+  Web --> User: Show error message
+  deactivate Web
+end
+
+' ============================================================================
+' Cleanup / Finalization
+' ============================================================================
+
+== Cleanup ==
+
+note over API: Optional cleanup steps
+API --> Web--: Final response
+Web --> User: Done
+deactivate Web
+
+@enduml
