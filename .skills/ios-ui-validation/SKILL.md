@@ -6,14 +6,23 @@ description: |
   (2) Creating accessibility identifiers with structured naming
   (3) Writing UI tests with step-by-step screenshots
   (4) Validating UI via screenshot comparison
-  (5) Integrating with Allure for test reporting
-  (6) Organizing shared test identifiers between app and test targets
-  File types: Swift UI tests, XCUITest, xcresult, Allure reports
+  (5) Writing snapshot tests with swift-snapshot-testing
+  (6) Comparing snapshot diffs with snapshotsdiff CLI
+  (7) Integrating with Allure for test reporting
+  (8) Organizing shared test identifiers between app and test targets
+  File types: Swift UI tests, XCUITest, xcresult, Allure reports, snapshot tests
 ---
 
 # iOS UI Validation
 
 Write UI, add UI tests with structured markup, validate via screenshots.
+
+> **Repository:** [swift-ui-testing-tools](https://github.com/ivalx1s/swift-ui-testing-tools)
+>
+> **Before using this skill, check for updates:**
+> ```bash
+> cd ~/src/swift-ui-testing-tools && git pull
+> ```
 
 ## Prerequisites
 
@@ -305,3 +314,358 @@ func toggleDebugMode() {
 ```
 
 This applies to any SwiftUI Toggle where the tap area includes the label.
+
+## Snapshot Testing (swift-snapshot-testing)
+
+For automated UI regression testing, use **snapshot tests** with [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing) by PointFree.
+
+### When to Use
+
+- **XCUITest screenshots** — manual validation during development, step-by-step flow verification
+- **Snapshot tests** — automated regression testing, CI/CD integration, comparing UI against reference images
+
+### Setup
+
+Add swift-snapshot-testing to your project:
+
+```swift
+// Package.swift
+dependencies: [
+    .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.17.0")
+]
+
+// Add to snapshot test target
+.testTarget(
+    name: "AppSnapshotTests",
+    dependencies: [
+        .product(name: "SnapshotTesting", package: "swift-snapshot-testing")
+    ]
+)
+```
+
+### Snapshot Naming Convention (BEM-like)
+
+Use the same BEM-like naming for snapshot tests:
+
+```swift
+// Pattern: {Module}_{Screen}_{State}
+"Auth_Initial_Default"
+"Auth_PinWall_CreatePin_3digits"
+"Settings_Profile_DarkMode"
+```
+
+### Writing Snapshot Tests
+
+Use **Swift Testing** framework (not XCTest):
+
+```swift
+import SnapshotTesting
+import Testing
+import SwiftUI
+@testable import MyApp
+
+@MainActor
+@Suite
+struct Auth_Initial_Page_SnapshotTests {
+
+    @Test(arguments: [ViewImageConfig.iPhone13Pro, ViewImageConfig.iPhoneSe])
+    func initialPage(_ device: ViewImageConfig) async throws {
+        let view = Auth.UI.Initial.Page(actions: .mock)
+
+        assertSnapshot(
+            of: view.withSnapshotContext(),
+            as: .image(
+                precision: 0.98,
+                perceptualPrecision: 0.98,
+                layout: .device(config: device)
+            ),
+            named: device.sizeLabel,
+            record: false  // Set to true to record new reference
+        )
+    }
+}
+
+// MARK: - Helpers
+
+extension View {
+    func withSnapshotContext(embedInNavigation: Bool = true) -> some View {
+        Group {
+            if embedInNavigation {
+                NavigationStack { self }
+            } else {
+                self
+            }
+        }
+        .transaction { $0.animation = .none }
+    }
+}
+
+extension ViewImageConfig {
+    var sizeLabel: String {
+        guard let w = size?.width, let h = size?.height else { return "unknown" }
+        return "\(Int(w))_\(Int(h))"
+    }
+}
+```
+
+### Key Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `precision` | 0.98 | % of pixels that must match exactly |
+| `perceptualPrecision` | 0.98 | Perceptual similarity (98% ≈ human eye) |
+| `layout` | `.device(config:)` | Device frame size |
+| `named` | device label | Suffix for snapshot filename |
+| `record` | false | Set true to record new reference |
+
+### Snapshot Storage
+
+Reference images are stored in `__Snapshots__` folders next to test files:
+
+```
+AppSnapshotTests/
+  Auth/
+    Auth_Initial_Page_Tests.swift
+    __Snapshots__/
+      Auth_Initial_Page_Tests/
+        initialPage.390_844.png     # iPhone 13 Pro
+        initialPage.320_568.png     # iPhone SE
+```
+
+### Test Case Patterns
+
+For views with multiple states, use test case arrays:
+
+```swift
+@MainActor
+@Suite
+struct PinWall_SnapshotTests {
+
+    struct TestCase {
+        let name: String
+        let props: PinLayout.Props
+    }
+
+    static let cases: [TestCase] = [
+        .init(name: "create_pin_3digits", props: .createPin(digits: 3)),
+        .init(name: "confirm_pin_empty", props: .confirmPin(digits: 0)),
+        .init(name: "enter_pin_error", props: .enterPin(error: true))
+    ]
+
+    @Test(arguments: [ViewImageConfig.iPhone13Pro])
+    func pinLayout(_ device: ViewImageConfig) async throws {
+        for testCase in Self.cases {
+            let view = PinLayout(props: testCase.props)
+
+            assertSnapshot(
+                of: view.withSnapshotContext(),
+                as: .image(precision: 0.98, perceptualPrecision: 0.98, layout: .device(config: device)),
+                named: testCase.name,
+                record: false
+            )
+        }
+    }
+}
+```
+
+### Comparing Failed Snapshots (snapshotsdiff)
+
+When snapshot tests fail, use **snapshotsdiff** CLI to create visual diffs:
+
+```bash
+# Compare two specific images
+swift run --package-path ~/src/swift-ui-testing-tools \
+  snapshotsdiff reference.png failed.png diff.png
+
+# Batch compare all failed snapshots
+swift run --package-path ~/src/swift-ui-testing-tools \
+  snapshotsdiff \
+    --artifacts ./SnapshotArtifacts \
+    --output ./SnapshotDiffs \
+    --tests ./AppSnapshotTests
+```
+
+Output structure for batch mode:
+
+```
+SnapshotDiffs/
+  TestName/
+    snapshotName/
+      ├── reference.png   (expected)
+      ├── failed.png      (actual)
+      └── diff.png        (visual diff)
+```
+
+Diff visualization:
+- **Different pixels**: highlighted with boosted color
+- **Same pixels**: dimmed gray with transparency
+
+### CI/CD Integration
+
+#### GitLab CI Example
+
+```yaml
+# .gitlab-ci.yml
+stages:
+  - build_and_test
+  - generate_snapshot_diffs
+
+variables:
+  SNAPSHOT_ARTIFACTS: "$CI_PROJECT_DIR/SnapshotArtifacts"
+  SNAPSHOT_DIFFS: "$CI_PROJECT_DIR/SnapshotDiffs"
+  SNAPSHOT_TESTS: "$CI_PROJECT_DIR/AppSnapshotTests"
+
+build_and_test:
+  stage: build_and_test
+  tags:
+    - ios
+  script:
+    - bundle exec fastlane build_and_test
+  artifacts:
+    when: always
+    paths:
+      - $SNAPSHOT_ARTIFACTS
+    expire_in: 1 day
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+generate_snapshot_diffs:
+  stage: generate_snapshot_diffs
+  tags:
+    - ios
+  dependencies:
+    - build_and_test
+  script:
+    - |
+      if [ -d "$SNAPSHOT_ARTIFACTS" ] && [ "$(ls -A $SNAPSHOT_ARTIFACTS)" ]; then
+        echo "Found snapshot artifacts, generating diffs..."
+        bundle exec fastlane generate_snapshot_diffs
+      else
+        echo "No snapshot artifacts found, skipping"
+      fi
+  artifacts:
+    when: always
+    paths:
+      - $SNAPSHOT_DIFFS
+    expire_in: 1 week
+  when: always
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+```
+
+#### Fastlane Lane
+
+```ruby
+# fastlane/Fastfile
+desc "Build and test"
+lane :build_and_test do
+  run_tests(
+    scheme: "MyApp",
+    device: "iPhone 16",
+    code_coverage: true
+  )
+end
+
+desc "Generate snapshot diffs"
+lane :generate_snapshot_diffs do
+  artifacts = ENV['SNAPSHOT_ARTIFACTS']
+  diffs = ENV['SNAPSHOT_DIFFS']
+  tests = ENV['SNAPSHOT_TESTS']
+
+  unless File.directory?(artifacts) && !Dir.empty?(artifacts)
+    UI.important("No snapshot artifacts found, skipping")
+    next
+  end
+
+  FileUtils.mkdir_p(diffs)
+
+  # Path to UITestToolkit (clone or submodule)
+  toolkit_path = "../swift-ui-testing-tools"
+
+  sh("cd #{toolkit_path} && swift run snapshotsdiff " \
+     "--artifacts \"#{artifacts}\" " \
+     "--output \"#{diffs}\" " \
+     "--tests \"#{tests}\"")
+
+  if $?.success? && File.directory?(diffs) && !Dir.empty?(diffs)
+    UI.success("Snapshot diffs generated: #{diffs}")
+  else
+    UI.important("No diffs generated (no differences found)")
+  end
+end
+```
+
+#### GitHub Actions Example
+
+```yaml
+# .github/workflows/snapshot-tests.yml
+name: Snapshot Tests
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Run snapshot tests
+        run: |
+          xcodebuild test \
+            -scheme AppSnapshotTests \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -resultBundlePath TestResults.xcresult || true
+
+      - name: Clone UITestToolkit
+        if: always()
+        run: git clone https://github.com/user/swift-ui-testing-tools.git /tmp/toolkit
+
+      - name: Generate snapshot diffs
+        if: always()
+        run: |
+          if [ -d "SnapshotArtifacts" ] && [ "$(ls -A SnapshotArtifacts)" ]; then
+            swift run --package-path /tmp/toolkit snapshotsdiff \
+              --artifacts ./SnapshotArtifacts \
+              --output ./SnapshotDiffs \
+              --tests ./AppSnapshotTests
+          fi
+
+      - name: Upload diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-diffs
+          path: SnapshotDiffs/
+          retention-days: 7
+```
+
+#### Pipeline Flow
+
+```
+┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
+│  build_and_test │────▶│ generate_snapshot_   │────▶│  Review diffs   │
+│                 │     │ diffs                │     │  in artifacts   │
+│  - run tests    │     │                      │     │                 │
+│  - save failed  │     │  - run snapshotsdiff │     │  reference.png  │
+│    snapshots    │     │  - save diffs        │     │  failed.png     │
+└─────────────────┘     └──────────────────────┘     │  diff.png       │
+                                                     └─────────────────┘
+```
+
+#### Snapshot Artifacts Location
+
+swift-snapshot-testing saves failed snapshots to a configurable location. Set via environment or test configuration:
+
+```swift
+// In test setUp
+SnapshotTesting.diffTool = "ksdiff"  // optional: diff tool for local dev
+SnapshotTesting.record = false
+
+// Failed snapshots go to __Snapshots__ sibling folder by default
+// Or configure custom path for CI artifacts
+```
