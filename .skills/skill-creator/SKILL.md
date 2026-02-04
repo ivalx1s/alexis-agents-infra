@@ -198,17 +198,18 @@ Claude reads REDLINING.md or OOXML.md only when the user needs those features.
 
 - **Avoid deeply nested references** - Keep references one level deep from SKILL.md. All reference files should link directly from SKILL.md.
 - **Structure longer reference files** - For files longer than 100 lines, include a table of contents at the top so Claude can see the full scope when previewing.
+- **Use unordered lists** - Always prefer unordered lists (`-`) over numbered lists (`1.`). Numbered lists are harder to maintain — adding/removing/reordering items requires renumbering. Exception: when order truly matters for correctness (e.g., step must come before another).
 
 ## Skill Creation Process
 
-Skill creation involves these steps:
+Skill creation involves these steps (in order):
 
-1. Understand the skill with concrete examples
-2. Plan reusable skill contents (scripts, references, assets)
-3. Initialize the skill (run init_skill.py)
-4. Edit the skill (implement resources and write SKILL.md)
-5. Package the skill (run package_skill.py)
-6. Iterate based on real usage
+- Understand the skill with concrete examples
+- Plan reusable skill contents (scripts, references, assets)
+- Initialize the skill (run init_skill.py)
+- Edit the skill (implement resources and write SKILL.md)
+- Package the skill (run package_skill.py)
+- Iterate based on real usage
 
 Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
 
@@ -345,6 +346,13 @@ Do not include any other fields in YAML frontmatter.
 ##### Body
 
 Write instructions for using the skill and its bundled resources.
+
+##### Language
+
+**All skills must be written in English.** This ensures:
+- Consistent tooling and script compatibility
+- Broader reusability across projects and teams
+- Standard terminology for technical concepts
 
 ### Step 5: Packaging a Skill
 
