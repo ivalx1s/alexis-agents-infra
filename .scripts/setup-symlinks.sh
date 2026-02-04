@@ -73,8 +73,8 @@ EOF
         fi
     done
 
-    # 4. Settings (optional - uncomment if you want to symlink settings)
-    # create_symlink "$AGENTS_DIR/.configs/claude-settings.json" "$CLAUDE_DIR/settings.json"
+    # 4. Settings (permissions, model, plugins)
+    create_symlink "$AGENTS_DIR/.configs/claude-settings.json" "$CLAUDE_DIR/settings.json"
 
     log_info "=== Claude Code setup complete ==="
 }
@@ -135,6 +135,7 @@ verify_setup() {
     echo ""
     echo "~/.claude/ symlinks:"
     ls -la "$CLAUDE_DIR/instructions" 2>/dev/null || echo "  instructions: NOT FOUND"
+    ls -la "$CLAUDE_DIR/settings.json" 2>/dev/null || echo "  settings.json: NOT FOUND"
     ls -la "$CLAUDE_DIR/skills" 2>/dev/null | head -5 || echo "  skills: NOT FOUND"
 
     echo ""

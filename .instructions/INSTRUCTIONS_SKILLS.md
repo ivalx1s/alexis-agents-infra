@@ -73,6 +73,14 @@ skill-name/
 * Test any included scripts before committing.
 * Document skill purpose, triggers, and usage clearly in `description` field.
 
+#### Evolving skills with tooling
+
+* When using a skill and **creating ad-hoc tooling** (scripts, commands, patterns) to accomplish the task:
+  * If the tooling is **reusable across projects** — **add it to the skill immediately**.
+  * Include it in `scripts/` or document it in `SKILL.md`.
+  * This ensures the next time the skill is used, the tooling is already available.
+* Skills should **accumulate useful tooling** over time, not just document patterns.
+
 ### Plugins
 
 * **Plugins** bundle multiple extensions (commands, agents, skills, hooks, MCP servers).

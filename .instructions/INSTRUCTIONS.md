@@ -8,6 +8,7 @@ This document loads all instruction modules automatically.
 @~/.agents/.instructions/INSTRUCTIONS_STRUCTURE.md
 @~/.agents/.instructions/INSTRUCTIONS_TOOLS.md
 @~/.agents/.instructions/INSTRUCTIONS_SKILLS.md
+@~/.agents/.instructions/INSTRUCTIONS_SKILL_TRIGGERS.md
 @~/.agents/.instructions/INSTRUCTIONS_DIAGRAMS.md
 @~/.agents/.instructions/INSTRUCTIONS_TESTING.md
 @~/.agents/.instructions/INSTRUCTIONS_WORKFLOW.md
