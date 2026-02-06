@@ -1,7 +1,5 @@
-# External skills (symlinks to local repos, machine-specific)
-skills/project-management
-skills/android-ui-validation
-skills/bug-tracking
+# External skills (not tracked — local repos, symlinks, machine-specific)
+skills/
 
 # macOS
 .DS_Store
