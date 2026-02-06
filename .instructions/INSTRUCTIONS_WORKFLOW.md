@@ -10,7 +10,8 @@
 
 ## Task Tracking
 
-* Create a task plan in `.temp/tasks.md` before starting work.
+* For projects with `project-management` skill active — use `task-board` CLI (epics, stories, tasks). Don't use `.temp/tasks.md`.
+* For projects without a board — create a task plan in `.temp/tasks.md` before starting work.
 * Track progress in the same file.
 * Update/append to the existing plan — **don't create new task files each session**.
 * Purpose: resume smoothly if the session breaks.

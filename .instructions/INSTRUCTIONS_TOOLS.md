@@ -10,27 +10,6 @@ Agent may use these tools freely.
 
 ---
 
-## Diagrams / Architecture
-
-### Structurizr DSL
-
-* Use `structurizr-cli` for C4 diagrams.
-* Alias `structurizr` is available and may be used.
-
-### PlantUML
-
-* Agent may download `plantuml.jar` into `.temp/` and use it locally to render diagrams.
-
-### Graphviz
-
-* Tooling: `dot` (and other Graphviz binaries).
-* Agent may use Graphviz to:
-  * render DOT graphs to `svg/png/pdf`;
-  * support diagram rendering/layout for tools that rely on Graphviz (e.g. certain PlantUML diagram types);
-  * generate quick dependency/relationship graphs for review.
-
----
-
 ## Scripting / Automation
 
 ### git
