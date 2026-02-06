@@ -55,7 +55,7 @@ skill-name/
 │   │   └── description: (required)
 │   └── Markdown instructions (required)
 └── Bundled Resources (optional)
-    ├── scripts/          - Executable code (Python/Bash/etc.)
+    ├── scripts/          - Executable code (Bash/etc.)
     ├── references/       - Documentation intended to be loaded into context as needed
     └── assets/           - Files used in output (templates, icons, fonts, etc.)
 ```
@@ -71,10 +71,10 @@ Every SKILL.md consists of:
 
 ##### Scripts (`scripts/`)
 
-Executable code (Python/Bash/etc.) for tasks that require deterministic reliability or are repeatedly rewritten.
+Executable code (Bash/etc.) for tasks that require deterministic reliability or are repeatedly rewritten.
 
 - **When to include**: When the same code is being rewritten repeatedly or deterministic reliability is needed
-- **Example**: `scripts/rotate_pdf.py` for PDF rotation tasks
+- **Example**: `scripts/rotate-pdf.sh` for PDF rotation tasks
 - **Benefits**: Token efficient, deterministic, may be executed without loading into context
 - **Note**: Scripts may still need to be read by the agent for patching or environment-specific adjustments
 
@@ -205,9 +205,9 @@ Skill creation involves these steps (in order):
 
 - Understand the skill with concrete examples
 - Plan reusable skill contents (scripts, references, assets)
-- Initialize the skill (run init_skill.py)
+- Initialize the skill (run init-skill.sh)
 - Edit the skill (implement resources and write SKILL.md)
-- Package the skill (run package_skill.py)
+- Package the skill (run package-skill.sh)
 - Iterate based on real usage
 
 Follow these steps in order, skipping only if there is a clear reason why they are not applicable.
@@ -239,7 +239,7 @@ To turn concrete examples into an effective skill, analyze each example by:
 Example: When building a `pdf-editor` skill to handle queries like "Help me rotate this PDF," the analysis shows:
 
 1. Rotating a PDF requires re-writing the same code each time
-2. A `scripts/rotate_pdf.py` script would be helpful to store in the skill
+2. A `scripts/rotate-pdf.sh` script would be helpful to store in the skill
 
 Example: When designing a `frontend-webapp-builder` skill for queries like "Build me a todo app" or "Build me a dashboard to track my steps," the analysis shows:
 
@@ -286,22 +286,21 @@ For global skills, use the same pattern in home directory:
 ~/.codex/skills/<skill-name> → ../../agents/skills/<skill-name>
 ```
 
-#### Using init_skill.py
+#### Using init-skill.sh
 
-When creating a new skill from scratch, always run the `init_skill.py` script. The script conveniently generates a new template skill directory that automatically includes everything a skill requires, making the skill creation process much more efficient and reliable.
+When creating a new skill from scratch, run the `init-skill.sh` script to scaffold the directory structure.
 
 Usage:
 
 ```bash
-scripts/init_skill.py <skill-name> --path <output-directory>
+scripts/init-skill.sh <skill-name> --path <output-directory>
 ```
 
 The script:
 
 - Creates the skill directory at the specified path
 - Generates a SKILL.md template with proper frontmatter and TODO placeholders
-- Creates example resource directories: `scripts/`, `references/`, and `assets/`
-- Adds example files in each directory that can be customized or deleted
+- Creates `scripts/`, `references/`, and `assets/` directories
 
 After initialization, customize or remove the generated SKILL.md and example files as needed.
 
@@ -355,30 +354,20 @@ Write instructions for using the skill and its bundled resources.
 
 ### Step 5: Packaging a Skill
 
-Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
+Once development of the skill is complete, package it into a distributable `.skill` file. The script validates first, then zips:
 
 ```bash
-scripts/package_skill.py <path/to/skill-folder>
+scripts/package-skill.sh <path/to/skill-folder>
+scripts/package-skill.sh <path/to/skill-folder> ./dist   # custom output dir
 ```
 
-Optional output directory specification:
+Standalone validation:
 
 ```bash
-scripts/package_skill.py <path/to/skill-folder> ./dist
+scripts/validate-skill.sh <path/to/skill-folder>
 ```
 
-The packaging script will:
-
-1. **Validate** the skill automatically, checking:
-
-   - YAML frontmatter format and required fields
-   - Skill naming conventions and directory structure
-   - Description completeness and quality
-   - File organization and resource references
-
-2. **Package** the skill if validation passes, creating a .skill file named after the skill (e.g., `my-skill.skill`) that includes all files and maintains the proper directory structure for distribution. The .skill file is a zip file with a .skill extension.
-
-If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
+Validates: frontmatter format, required fields, naming conventions, body length. If validation fails, fix errors and re-run.
 
 ### Step 6: Iterate
 
