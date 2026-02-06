@@ -19,8 +19,8 @@ Automatic skill activation rules. When these topics come up — **FIRST load the
 | feature development, implementation + board exists | `project-management` | Pick tasks from board, assign agents, update statuses. |
 | spec, SPEC.md, requirements, breakdown | `project-management` | Break down spec into epics/stories/tasks via CLI. |
 | architecture diagram, C4, structurizr, plantuml, sequence/component/class diagram | `architecture-diagrams` | Follow skill for patterns, folder structure, rendering. |
-| iOS UI test, screenshot validation, XCUITest, snapshot test iOS | `ios-ui-validation` | Follow skill for Page Object, accessibility IDs, screenshots. |
-| Android UI test, espresso, compose test, screenshot validation Android | `android-ui-validation` | Follow skill for test tags, Page Object, screenshots. |
+| iOS UI test, screenshot validation, XCUITest, snapshot test iOS | `ios-testing-tools` | Follow skill for Page Object, accessibility IDs, screenshots. |
+| Android UI test, espresso, compose test, screenshot validation Android | `android-testing-tools` | Follow skill for test tags, Page Object, screenshots. |
 
 ---
 
