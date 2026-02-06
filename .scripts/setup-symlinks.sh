@@ -66,8 +66,10 @@ EOF
     log_info "Updated $CLAUDE_DIR/CLAUDE.md"
 
     # 3. Skills - create symlinks for each skill
-    for skill_dir in "$AGENTS_DIR/.skills"/*; do
-        if [ -d "$skill_dir" ]; then
+    #    .skills/ = bundled (tracked in git)
+    #    skills/  = external (gitignored, local repos)
+    for skill_dir in "$AGENTS_DIR/.skills"/* "$AGENTS_DIR/skills"/*; do
+        if [ -d "$skill_dir" ] || [ -L "$skill_dir" ]; then
             skill_name=$(basename "$skill_dir")
             create_symlink "$skill_dir" "$CLAUDE_DIR/skills/$skill_name"
         fi
@@ -95,8 +97,10 @@ setup_codex() {
     create_symlink "$AGENTS_DIR/.instructions/AGENTS.md" "$CODEX_DIR/AGENTS.md"
 
     # 2. Skills - create symlinks for each skill (skip .system)
-    for skill_dir in "$AGENTS_DIR/.skills"/*; do
-        if [ -d "$skill_dir" ]; then
+    #    .skills/ = bundled (tracked in git)
+    #    skills/  = external (gitignored, local repos)
+    for skill_dir in "$AGENTS_DIR/.skills"/* "$AGENTS_DIR/skills"/*; do
+        if [ -d "$skill_dir" ] || [ -L "$skill_dir" ]; then
             skill_name=$(basename "$skill_dir")
             # Don't overwrite system skills
             if [ ! -d "$CODEX_DIR/skills/.system/$skill_name" ]; then

@@ -1,3 +1,0 @@
-extension UITest {
-    enum Page {}
-}
