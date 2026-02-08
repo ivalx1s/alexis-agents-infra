@@ -16,10 +16,10 @@ equipped with procedural knowledge that no model can fully possess.
 
 ### What Skills Provide
 
-1. Specialized workflows - Multi-step procedures for specific domains
-2. Tool integrations - Instructions for working with specific file formats or APIs
-3. Domain expertise - Company-specific knowledge, schemas, business logic
-4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
+- Specialized workflows - Multi-step procedures for specific domains
+- Tool integrations - Instructions for working with specific file formats or APIs
+- Domain expertise - Company-specific knowledge, schemas, business logic
+- Bundled resources - Scripts, references, and assets for complex and repetitive tasks
 
 ## Core Principles
 
@@ -114,9 +114,9 @@ The skill should only contain the information needed for an AI agent to do the j
 
 Skills use a three-level loading system to manage context efficiently:
 
-1. **Metadata (name + description)** - Always in context (~100 words)
-2. **SKILL.md body** - When skill triggers (<5k words)
-3. **Bundled resources** - As needed by the agent (Unlimited because scripts can be executed without reading into context window)
+- **Metadata (name + description)** - Always in context (~100 words)
+- **SKILL.md body** - When skill triggers (<5k words)
+- **Bundled resources** - As needed by the agent (Unlimited because scripts can be executed without reading into context window)
 
 #### Progressive Disclosure Patterns
 
@@ -224,6 +224,7 @@ For example, when building an image-editor skill, relevant questions include:
 - "Can you give some examples of how this skill would be used?"
 - "I can imagine users asking for things like 'Remove the red-eye from this image' or 'Rotate this image'. Are there other ways you imagine this skill being used?"
 - "What would a user say that should trigger this skill?"
+- **"What languages will you use this skill in?"** (e.g. English only, Russian, mixed) — A skill with only English triggers will NOT activate when the user speaks another language. This is a common failure mode. Always ask, then ensure frontmatter `description` and any external trigger configs include terms in all target languages.
 
 To avoid overwhelming users, avoid asking too many questions in a single message. Start with the most important questions and follow up as needed for better effectiveness.
 
@@ -233,23 +234,23 @@ Conclude this step when there is a clear sense of the functionality the skill sh
 
 To turn concrete examples into an effective skill, analyze each example by:
 
-1. Considering how to execute on the example from scratch
-2. Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly
+- Considering how to execute on the example from scratch
+- Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly
 
 Example: When building a `pdf-editor` skill to handle queries like "Help me rotate this PDF," the analysis shows:
 
-1. Rotating a PDF requires re-writing the same code each time
-2. A `scripts/rotate-pdf.sh` script would be helpful to store in the skill
+- Rotating a PDF requires re-writing the same code each time
+- A `scripts/rotate-pdf.sh` script would be helpful to store in the skill
 
 Example: When designing a `frontend-webapp-builder` skill for queries like "Build me a todo app" or "Build me a dashboard to track my steps," the analysis shows:
 
-1. Writing a frontend webapp requires the same boilerplate HTML/React each time
-2. An `assets/hello-world/` template containing the boilerplate HTML/React project files would be helpful to store in the skill
+- Writing a frontend webapp requires the same boilerplate HTML/React each time
+- An `assets/hello-world/` template containing the boilerplate HTML/React project files would be helpful to store in the skill
 
 Example: When building a `big-query` skill to handle queries like "How many users have logged in today?" the analysis shows:
 
-1. Querying BigQuery requires re-discovering the table schemas and relationships each time
-2. A `references/schema.md` file documenting the table schemas would be helpful to store in the skill
+- Querying BigQuery requires re-discovering the table schemas and relationships each time
+- A `references/schema.md` file documenting the table schemas would be helpful to store in the skill
 
 To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.
 
@@ -337,6 +338,7 @@ Write the YAML frontmatter with `name` and `description`:
 - `description`: This is the primary triggering mechanism for your skill, and helps the agent understand when to use the skill.
   - Include both what the Skill does and specific triggers/contexts for when to use it.
   - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to the agent.
+  - **Multi-language triggers**: If the skill will be used in non-English languages, include key trigger terms in those languages directly in the description. The description is always in context — if it only contains English terms, the agent won't match it against non-English user input. Also update any external trigger configs (e.g. `INSTRUCTIONS_SKILL_TRIGGERS.md`) if the project uses one.
   - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when the agent needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
 
 Do not include any other fields in YAML frontmatter.
@@ -375,7 +377,7 @@ After testing the skill, users may request improvements. Often this happens righ
 
 **Iteration workflow:**
 
-1. Use the skill on real tasks
-2. Notice struggles or inefficiencies
-3. Identify how SKILL.md or bundled resources should be updated
-4. Implement changes and test again
+- Use the skill on real tasks
+- Notice struggles or inefficiencies
+- Identify how SKILL.md or bundled resources should be updated
+- Implement changes and test again
