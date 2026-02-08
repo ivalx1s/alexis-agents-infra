@@ -224,7 +224,9 @@ For example, when building an image-editor skill, relevant questions include:
 - "Can you give some examples of how this skill would be used?"
 - "I can imagine users asking for things like 'Remove the red-eye from this image' or 'Rotate this image'. Are there other ways you imagine this skill being used?"
 - "What would a user say that should trigger this skill?"
-- **"What languages will you use this skill in?"** (e.g. English only, Russian, mixed) — A skill with only English triggers will NOT activate when the user speaks another language. This is a common failure mode. Always ask, then ensure frontmatter `description` and any external trigger configs include terms in all target languages.
+- "What languages will you use this skill in?" (e.g. English only, Russian, mixed)
+
+**On trigger languages:** A skill with only English triggers will NOT activate when the user speaks another language. This is a common failure mode. Always ask about target languages, then ensure frontmatter `description` and any external trigger configs include terms in all of them.
 
 To avoid overwhelming users, avoid asking too many questions in a single message. Start with the most important questions and follow up as needed for better effectiveness.
 
