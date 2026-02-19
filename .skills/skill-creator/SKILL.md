@@ -345,6 +345,26 @@ Write the YAML frontmatter with `name` and `description`:
 
 Do not include any other fields in YAML frontmatter.
 
+Strict requirements:
+
+- Frontmatter must be the very first content in `SKILL.md` (line 1 is exactly `---`).
+- Frontmatter must be closed by a second `---` before any markdown heading.
+- Do not place a title/header before frontmatter.
+- Description must be a YAML string. Use a folded block (`description: >`) for long text.
+- If description contains punctuation like `:` and you use one-line style, quote it.
+
+Use this exact safe template:
+
+```yaml
+---
+name: your-skill-name
+description: >
+  What this skill does and exactly when to use it.
+---
+```
+
+Do not include any other fields in SKILL.md frontmatter unless explicitly required by platform policy.
+
 ##### Body
 
 Write instructions for using the skill and its bundled resources.
