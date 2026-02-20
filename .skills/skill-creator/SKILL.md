@@ -1,6 +1,12 @@
 ---
 name: skill-creator
-description: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends the agent's capabilities with specialized knowledge, workflows, or tool integrations.
+description: >
+  Guide for creating effective skills. Use when users want to create a new skill
+  (or update an existing skill) that extends the agent's capabilities with
+  specialized knowledge, workflows, or tool integrations. Also use when setting up,
+  installing, or configuring skill installation (setup.sh, symlinks, copy to .agents).
+  Triggers: create skill, new skill, skill setup, setup skill, install skill,
+  настроить скил, создать скил, сетап скила, установить скил, скил креатор.
 ---
 
 # Skill Creator
@@ -262,9 +268,13 @@ At this point, it is time to actually create the skill.
 
 Skip this step only if the skill being developed already exists, and iteration or packaging is needed. In this case, continue to the next step.
 
-#### Skill Location Pattern (agents/skills)
+#### Skill Location Patterns
 
-**Always use the `agents/skills/` pattern for project-local skills:**
+Two deployment models: project-local skills and standalone skill repos.
+
+##### Project-Local Skills
+
+For skills that live inside a project (not reusable across projects):
 
 ```
 project/
@@ -280,14 +290,63 @@ ln -s ../../agents/skills/<skill-name> .claude/skills/<skill-name>
 ln -s ../../agents/skills/<skill-name> .codex/skills/<skill-name>
 ```
 
-**Why:** `agents/skills/` is visible in Finder (no dot prefix), serves as single source of truth, and symlinks wire it up for compatible agents (`.claude/skills/`, `.codex/skills/`, etc.). Edit in `agents/skills/` — changes reflect everywhere.
+**Why:** `agents/skills/` is visible in Finder (no dot prefix), serves as single source of truth, and symlinks wire it up for compatible agents.
 
-For global skills, use the same pattern in home directory:
+##### Standalone Skill Repos (Global Skills)
+
+For reusable skills distributed as separate git repos. The installation pattern:
+
 ```
-~/agents/skills/<skill-name>/
-~/.claude/skills/<skill-name> → ../../agents/skills/<skill-name>
-~/.codex/skills/<skill-name> → ../../agents/skills/<skill-name>
+~/src/skill-<name>/            ← development repo (edit here)
+  setup.sh                     ← runs install: copy + symlink
+
+~/.agents/skills/<name>/       ← INSTALLED COPY (not a symlink!)
+~/.claude/skills/<name>        ← symlink → ~/.agents/skills/<name>
+~/.codex/skills/<name>         ← symlink → ~/.agents/skills/<name>
 ```
+
+**Key rule:** `~/.agents/skills/<name>/` is a **copy** (via `rsync`), not a symlink to the src repo. This ensures agents don't break if the src repo is moved, rebased, or on a broken branch.
+
+**setup.sh** handles everything — copy to `.agents`, create symlinks:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+SKILL_NAME="<skill-name>"
+SKILL_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+AGENTS_DIR="$HOME/.agents/skills"
+CLAUDE_DIR="$HOME/.claude/skills"
+CODEX_DIR="$HOME/.codex/skills"
+
+echo "Installing skill: $SKILL_NAME"
+
+# 1. Copy skill into .agents/skills/ (installed copy, not a symlink)
+if [ -L "$AGENTS_DIR/$SKILL_NAME" ]; then
+  rm -f "$AGENTS_DIR/$SKILL_NAME"
+fi
+mkdir -p "$AGENTS_DIR/$SKILL_NAME"
+rsync -a --delete "$SKILL_DIR/" "$AGENTS_DIR/$SKILL_NAME/" \
+  --exclude='.git' --exclude='setup.sh'
+echo "  Copied -> $AGENTS_DIR/$SKILL_NAME/"
+
+# 2. Symlink from .claude/skills/ -> .agents/skills/
+mkdir -p "$CLAUDE_DIR"
+rm -f "$CLAUDE_DIR/$SKILL_NAME"
+ln -s "$AGENTS_DIR/$SKILL_NAME" "$CLAUDE_DIR/$SKILL_NAME"
+
+# 3. Symlink from .codex/skills/ -> .agents/skills/
+mkdir -p "$CODEX_DIR"
+rm -f "$CODEX_DIR/$SKILL_NAME"
+ln -s "$AGENTS_DIR/$SKILL_NAME" "$CODEX_DIR/$SKILL_NAME"
+
+echo "Done. Installed $(git -C "$SKILL_DIR" describe --tags --always 2>/dev/null || echo 'unknown')"
+```
+
+**Workflow:** edit in src repo → run `setup.sh` → updated copy in `.agents` → agents pick up changes.
+
+For skills with binaries (Go CLI tools, etc.), setup.sh also builds binaries and symlinks to `~/.local/bin/` before the skill copy step. See `skill-project-management/scripts/setup.sh` for example.
 
 #### Using init-skill.sh
 

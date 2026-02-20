@@ -15,15 +15,28 @@ red()   { print -P "%F{red}$1%f" }
 green() { print -P "%F{green}$1%f" }
 
 # --- Args ---
+STANDALONE=false
+
+# Parse flags
+args=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --standalone) STANDALONE=true; shift ;;
+    *) args+=("$1"); shift ;;
+  esac
+done
+set -- "${args[@]}"
+
 if [[ $# -lt 3 ]] || [[ "$2" != "--path" ]]; then
-  echo "Usage: init-skill.sh <skill-name> --path <path>"
+  echo "Usage: init-skill.sh <skill-name> --path <path> [--standalone]"
   echo ""
-  echo "  skill-name  Hyphen-case identifier (e.g. 'data-analyzer')"
-  echo "  path        Directory where skill folder will be created"
+  echo "  skill-name   Hyphen-case identifier (e.g. 'data-analyzer')"
+  echo "  path         Directory where skill folder will be created"
+  echo "  --standalone Generate setup.sh for standalone repo installation"
   echo ""
   echo "Examples:"
   echo "  init-skill.sh my-new-skill --path agents/skills"
-  echo "  init-skill.sh api-helper --path /custom/location"
+  echo "  init-skill.sh api-helper --path /custom/location --standalone"
   exit 1
 fi
 
@@ -106,6 +119,49 @@ Replace this file with actual assets or delete if not needed.
 EOF
 green "Created: assets/README.md"
 
+# --- setup.sh (standalone repos) ---
+if $STANDALONE; then
+  cat > "$SKILL_DIR/setup.sh" << SETUPEOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+SKILL_NAME="$SKILL_NAME"
+SKILL_DIR="\$(cd "\$(dirname "\$0")" && pwd)"
+
+AGENTS_DIR="\$HOME/.agents/skills"
+CLAUDE_DIR="\$HOME/.claude/skills"
+CODEX_DIR="\$HOME/.codex/skills"
+
+echo "Installing skill: \$SKILL_NAME"
+echo "  Source: \$SKILL_DIR"
+
+# 1. Copy skill into .agents/skills/ (installed copy, not a symlink)
+if [ -L "\$AGENTS_DIR/\$SKILL_NAME" ]; then
+  rm -f "\$AGENTS_DIR/\$SKILL_NAME"
+fi
+mkdir -p "\$AGENTS_DIR/\$SKILL_NAME"
+rsync -a --delete "\$SKILL_DIR/" "\$AGENTS_DIR/\$SKILL_NAME/" --exclude='.git' --exclude='setup.sh'
+echo "  Copied -> \$AGENTS_DIR/\$SKILL_NAME/"
+
+# 2. Symlink from .claude/skills/ -> .agents/skills/
+mkdir -p "\$CLAUDE_DIR"
+rm -f "\$CLAUDE_DIR/\$SKILL_NAME"
+ln -s "\$AGENTS_DIR/\$SKILL_NAME" "\$CLAUDE_DIR/\$SKILL_NAME"
+echo "  Symlink -> \$CLAUDE_DIR/\$SKILL_NAME"
+
+# 3. Symlink from .codex/skills/ -> .agents/skills/
+mkdir -p "\$CODEX_DIR"
+rm -f "\$CODEX_DIR/\$SKILL_NAME"
+ln -s "\$AGENTS_DIR/\$SKILL_NAME" "\$CODEX_DIR/\$SKILL_NAME"
+echo "  Symlink -> \$CODEX_DIR/\$SKILL_NAME"
+
+echo ""
+echo "Done. Installed \$(git -C "\$SKILL_DIR" describe --tags --always 2>/dev/null || echo 'unknown')"
+SETUPEOF
+  chmod +x "$SKILL_DIR/setup.sh"
+  green "Created: setup.sh (standalone installation)"
+fi
+
 # --- Done ---
 print ""
 green "Skill '$SKILL_NAME' initialized at $SKILL_DIR"
@@ -114,3 +170,6 @@ echo "Next steps:"
 echo "  1. Edit SKILL.md — fill in description and instructions"
 echo "  2. Add scripts/references/assets as needed"
 echo "  3. Run validate-skill.sh to check structure"
+if $STANDALONE; then
+  echo "  4. Run ./setup.sh to install"
+fi
